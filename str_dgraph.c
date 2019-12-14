@@ -64,7 +64,11 @@ int addEdge(Graph graph, char * v1, char * v2, char *lineNo){//from v1 to v2
 
     // ADD EDGE
     JRB tree, subtree;
+
+    // search for v1 tree
     node = jrb_find_str(graph.edges, v1);
+
+    // if not exist, then add new
     if(node == NULL){
         tree = make_jrb();
         jrb_insert_str(graph.edges, strdup(v1), new_jval_v(tree));
@@ -73,7 +77,10 @@ int addEdge(Graph graph, char * v1, char * v2, char *lineNo){//from v1 to v2
         tree = (JRB)jval_v(node->val);
     }
 
+    // search for v2 on the tree
     node = jrb_find_str(tree, v2);
+
+    // if not exist, then add new
     if(node == NULL){
         subtree = make_jrb();
         jrb_insert_str(tree, strdup(v2), new_jval_v(subtree));
@@ -82,7 +89,10 @@ int addEdge(Graph graph, char * v1, char * v2, char *lineNo){//from v1 to v2
         subtree = (JRB) jval_v(node->val);
     }
 
+    // search for lineNo on the tree
     node = jrb_find_str(subtree, lineNo);
+
+    // if not exist, then add new
     if(node == NULL) {
         jrb_insert_str(subtree, strdup(lineNo), new_jval_i(1));
         return 1;
