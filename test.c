@@ -22,11 +22,24 @@ void main() {
     for(int i = 0; i < n; i++) {
         printf("%s\n", output[i]);
     }
-    
+
     char lines[100][ID_LENGTH];
     int n_lines = getLinesThroughStation(g, "nguyen trai", lines);
     printf("Station: nguyen trai\n");
     for(int i = 0; i < n_lines; i++) {
         printf("%s\n", lines[i]);
+    }
+
+
+    // test shortest path
+    char *start = "khuat duy tien";
+    char *stop = "tay son";
+    int length = 0;
+    char path[100][ID_LENGTH];
+
+    double total_weight = shortestPath(g, "khuat duy tien", "tay son", &length, path);
+    printf("Shortest path's weight: %lf\n", total_weight);
+    for(int i = 0; i < length; i++) {
+        printf("%s ", path[i]);
     }
 }

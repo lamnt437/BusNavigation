@@ -3,6 +3,7 @@
 #include "libfdr/dllist.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 Graph createGraph(){
@@ -396,4 +397,148 @@ int getLinesThroughStation(Graph g, char *station_id, char lines[][ID_LENGTH]) {
 int getStationsOnLine(Graph g, char *line_name, char stations[][ID_LENGTH]) {
     // receive line name
     // return list of stations
+}
+
+/* Shortest Path */
+
+char *pdequeue(Dllist pqueue, JRB value_map){	//dequeue node with min value
+	double min_value = INFINITIVE_VALUE;
+	double current_value;
+
+	Dllist dll_ptr, min_node_ptr;
+	JRB jrb_ptr;
+
+	dll_traverse(dll_ptr, pqueue){
+		char *id = jval_s(dll_ptr->val);
+		jrb_ptr = jrb_find_str(value_map, id);
+		current_value = jval_d(jrb_ptr->val);
+		if(current_value < min_value){
+			min_node_ptr = dll_ptr;
+			min_value = current_value;
+		}
+	}
+
+	char *dequeued_id = (char *)malloc(sizeof(char) * ID_LENGTH);
+	strcpy(dequeued_id, jval_s(min_node_ptr->val));
+	dll_delete_node(min_node_ptr);
+
+	return dequeued_id;
+}
+
+int checkInQueue(Dllist pqueue, char *id){
+	Dllist dll_ptr;
+	dll_traverse(dll_ptr, pqueue){
+		char *key = jval_s(dll_ptr->val);
+		if(strcmp(key, id) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
+double shortestPath(Graph graph, char *start, char *stop, int *length, char path[][ID_LENGTH]){
+	*length = 0;
+    // check if start exists in graph
+    
+	JRB start_ptr = jrb_find_str(graph.vertices, start);
+	if(start_ptr == NULL) return INFINITIVE_VALUE;
+    
+	//init
+	Dllist pqueue = new_dllist();
+	JRB visited = make_jrb();
+	JRB value_map = make_jrb();
+	JRB parent_map = make_jrb();
+
+	//enqueue start node
+	jrb_insert_str(value_map, strdup(start), new_jval_d(0));
+	jrb_insert_str(parent_map, strdup(start), new_jval_s(start));
+	dll_append(pqueue, new_jval_s(strdup(start)));
+    
+
+	char *parent_id;
+
+	while(!dll_empty(pqueue)){
+		//get parent id
+		parent_id = pdequeue(pqueue, value_map);
+		jrb_insert_str(visited, strdup(parent_id), new_jval_i(1));
+
+		if(strcmp(parent_id, stop) == 0) break;
+
+		//get parent value
+		JRB parent_value_ptr = jrb_find_str(value_map, parent_id);
+		double parent_value = jval_d(parent_value_ptr->val);
+
+		//get outlist of parent node
+		char outlist[100][ID_LENGTH];
+		int number_of_children = outdegree(graph, parent_id, outlist);
+
+		//enqueue children
+		for(int i = 0; i < number_of_children; i++){
+			char *child_id = outlist[i];
+
+			//find if child is visited
+			JRB find_child = jrb_find_str(visited, child_id);
+			if(find_child != NULL) continue;
+			
+			//enqueue child
+			if(!checkInQueue(pqueue, child_id))
+				dll_append(pqueue, new_jval_s(strdup(child_id)));
+
+			//relax
+			// double temp_value = parent_value + getEdgeValue(graph, parent_id, child_id);
+            // since every edge has weight = 1
+            double temp_value = parent_value + 1;
+			JRB child_value_ptr = jrb_find_str(value_map, child_id);
+			if(child_value_ptr == NULL){
+				jrb_insert_str(value_map, strdup(child_id), new_jval_d(temp_value));
+				jrb_insert_str(parent_map, strdup(child_id), new_jval_s(parent_id));
+			}
+			else{
+				double child_value = jval_d(child_value_ptr->val);
+				if(temp_value < child_value){
+					child_value_ptr->val = new_jval_d(temp_value);
+					JRB child_parent_ptr = jrb_find_str(parent_map, child_id);
+					child_parent_ptr->val = new_jval_s(strdup(parent_id));
+				}
+			}
+		}
+	}
+
+	if(strcmp(parent_id, stop) != 0) return INFINITIVE_VALUE;
+
+	// //print value map
+	// JRB value_ptr;
+	// jrb_traverse(value_ptr, value_map){
+	// 	printf("%s: %lf\n", jval_s(value_ptr->key), jval_d(value_ptr->val));
+	// }
+
+	//get path weight
+	JRB find_value = jrb_find_str(value_map, parent_id);
+	double path_weight = jval_d(find_value->val);
+
+	//write path
+	int counter = 0;
+	char *current_id = parent_id;
+	while(1){
+		strcpy(path[counter], current_id);
+		counter++;
+		if(strcmp(current_id, start) == 0)
+			break;
+		current_id = jval_s(jrb_val(jrb_find_str(parent_map, current_id)));
+	}
+
+	//reverse path
+	int i = 0, j = counter - 1;
+	char temp[ID_LENGTH];
+
+	while(i < j){
+		strcpy(temp, path[i]);
+		strcpy(path[i], path[j]);
+		strcpy(path[j], temp);
+		i++;
+		j--;
+	}
+
+	*length = counter;
+	return path_weight;
 }
