@@ -370,8 +370,11 @@ int checkInQueue(Dllist pqueue, char *id){
 double shortestPath(Graph graph, char *start, char *stop, int *length, char path[][ID_LENGTH]){
 	*length = 0;
     // check if start exists in graph
+    printf("start: %s\n", start);
+    printf("stop: %s\n", stop);
     
 	JRB start_ptr = jrb_find_str(graph.vertices, start);
+    printf("*\n");
 	if(start_ptr == NULL) return INFINITIVE_VALUE;
     
 	//init
@@ -380,20 +383,27 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 	JRB value_map = make_jrb();
 	JRB parent_map = make_jrb();
 
+    printf("*\n");
 	//enqueue start node
 	jrb_insert_str(value_map, strdup(start), new_jval_d(0));
 	jrb_insert_str(parent_map, strdup(start), new_jval_s(start));
 	dll_append(pqueue, new_jval_s(strdup(start)));
     
-
+    printf("*\n");
 	char *parent_id;
 
 	while(!dll_empty(pqueue)){
 		//get parent id
 		parent_id = pdequeue(pqueue, value_map);
 		jrb_insert_str(visited, strdup(parent_id), new_jval_i(1));
+        
+        printf("*\n");
+        printf("Parent_id: %s\n", parent_id);
 
-		if(strcmp(parent_id, stop) == 0) break;
+		if(strcmp(parent_id, stop) == 0) {
+            printf("BREAKKKKKKKKKKK!\n");
+            break;
+        }
 
 		//get parent value
 		JRB parent_value_ptr = jrb_find_str(value_map, parent_id);
@@ -405,6 +415,7 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 
 		//enqueue children
 		for(int i = 0; i < number_of_children; i++){
+            printf("^\n");
 			char *child_id = outlist[i];
 
 			//find if child is visited
@@ -433,8 +444,10 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 				}
 			}
 		}
+        printf(">>>\n");
 	}
-
+    printf("parent_id: %s\n", parent_id);
+    // printf("^\n");
 	if(strcmp(parent_id, stop) != 0) return INFINITIVE_VALUE;
 
 	//get path weight
