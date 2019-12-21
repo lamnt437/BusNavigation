@@ -9,6 +9,12 @@ typedef struct{
 	JRB edges;
 }Graph;
 
+typedef struct{
+	char *prev;
+	char *next;
+	char *line;
+}Edge;
+
 Graph createGraph();
 int addVertex(Graph graph, char *id, char *name);
 char *getVertex(Graph graph, char *id);
@@ -27,3 +33,4 @@ void topologicalSort(Graph graph, char output[][ID_LENGTH], int *n);
 int getLinesOnEdge(Graph g, char *v1, char *v2, char lines[][ID_LENGTH]);
 int getLinesThroughStation(Graph g, char *station_id, char lines[][ID_LENGTH]);
 double shortestPath(Graph graph, char *start, char *stop, int *length, char path[][ID_LENGTH]);
+int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **edges);

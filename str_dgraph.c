@@ -29,32 +29,6 @@ char *getVertex(Graph graph, char *id){
     return NULL;
 }
 
-// int addEdge(Graph graph, char * v1, char * v2){//from v1 to v2
-//     // CHECK IF V1 AND V2 EXIST IN Graph's vertice list
-//     JRB node = jrb_find_str(graph.vertices, v1);
-//     if(node == NULL) return 0;
-//     node = jrb_find_str(graph.vertices, v2);
-//     if(node == NULL) return 0;
-
-//     // ADD EDGE
-//     JRB tree;
-//     node = jrb_find_str(graph.edges, v1);
-//     if(node == NULL){
-//         tree = make_jrb();
-//         jrb_insert_str(graph.edges, strdup(v1), new_jval_v(tree));
-//     }
-//     else{
-//         tree = (JRB)jval_v(node->val);
-//     }
-
-//     node = jrb_find_str(tree, v2);
-//     if(node == NULL){
-//         jrb_insert_str(tree, strdup(v2), new_jval_i(1));
-//         return 1;
-//     }
-//     return 0;
-// }
-
 // int lineNo => char *lineNo + strdup
 int addEdge(Graph graph, char * v1, char * v2, char *lineNo){//from v1 to v2
     // CHECK IF V1 AND V2 EXIST IN Graph's vertice list
@@ -100,44 +74,6 @@ int addEdge(Graph graph, char * v1, char * v2, char *lineNo){//from v1 to v2
     }
     return 0;
 }
-
-// /* for node station */
-// int addEdge(Graph graph, char *v1, char *v2, int lineNo) {
-//     // search for v1, v2
-//     JRB tree, node;
-//     JRB v1_ptr = jrb_find_str(graph.vertices, v1);
-//     if(v1_ptr == NULL) return 0;
-//     JRB v2_ptr = jrb_find_str(graph.vertices, v2);
-//     if(v2_ptr == NULL) return 0;
-    
-//     // top down approach
-//     // search for v1 tree
-//     node = jrb_find_str(graph.edges, v1);
-//     // if not exist, then add new
-//     if(node == NULL) {
-//         tree = make_jrb();
-//         jrb_insert_str(graph.edges, strdup(v1), new_jval_v(tree));
-//     } else {
-//         tree = (JRB) jval_v(node->val);
-//     }
-//     // search for v2 on the tree
-//     // if not exist, then add new
-//     node = jrb_find_str(tree, v2);
-//     if(node == NULL) {
-//         tree = make_jrb();
-//         jrb_insert_str(graph.edges, strdup(v2), new_jval_v(tree));
-//     } else {
-//         tree = (JRB) jval_v(node->val);
-//     }
-//     // search for lineNo on the tree
-//     // if not exist, then add new
-//     node = jrb_find_int(tree, lineNo);
-//     if(node == NULL) {
-//         jrb_insert_int(tree, lineNo, new_jval_i(1));
-//         return 1;
-//     }
-//     return 0;
-// }
 
 int hasEdge(Graph graph, char * v1, char * v2){
     JRB node = jrb_find_str(graph.edges, v1);
@@ -394,11 +330,6 @@ int getLinesThroughStation(Graph g, char *station_id, char lines[][ID_LENGTH]) {
     return counter;
 }
 
-int getStationsOnLine(Graph g, char *line_name, char stations[][ID_LENGTH]) {
-    // receive line name
-    // return list of stations
-}
-
 /* Shortest Path */
 
 char *pdequeue(Dllist pqueue, JRB value_map){	//dequeue node with min value
@@ -506,12 +437,6 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 
 	if(strcmp(parent_id, stop) != 0) return INFINITIVE_VALUE;
 
-	// //print value map
-	// JRB value_ptr;
-	// jrb_traverse(value_ptr, value_map){
-	// 	printf("%s: %lf\n", jval_s(value_ptr->key), jval_d(value_ptr->val));
-	// }
-
 	//get path weight
 	JRB find_value = jrb_find_str(value_map, parent_id);
 	double path_weight = jval_d(find_value->val);
@@ -541,4 +466,51 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 
 	*length = counter;
 	return path_weight;
+}
+
+/* Find combination of lines */
+// strategies
+        // choose one, keep current line, if can't then choose the next one randomly
+        // get the smallest number of different lines from list of combinations
+
+int isLineOnEdge(Graph g, char *v1, char *v2, char *line) {
+    char linesOnEdge[100][ID_LENGTH];
+    int n_linesOnEdge = getLinesOnEdge(g, v1, v2, linesOnEdge);
+    for(int i = 0; i < n_linesOnEdge; i++) {
+        if(strcmp(linesOnEdge[i], line) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **edges) {
+    *edges = (Edge *) malloc(sizeof(Edge) * 100);
+    int counter = 0;
+
+    if(path_length <= 1)
+        return counter;
+    
+    char *prev = NULL;
+    for(int i = 0; i < path_length - 1; i++) {
+        char *station1 = path[i];
+        char *station2 = path[i + 1];
+
+        char linesOnEdge[100][ID_LENGTH];
+        int n_linesOnEdge = getLinesOnEdge(g, station1, station2, linesOnEdge);
+        
+        if(prev == NULL) {
+            prev = linesOnEdge[0];
+        } else {
+            int onEdge = isLineOnEdge(g, station1, station2, prev);
+            if(onEdge != 1)
+                prev = linesOnEdge[0];
+        }
+        
+        ((*edges)[counter]).prev = strdup(station1);
+        ((*edges)[counter]).next = strdup(station2);
+        ((*edges)[counter]).line = strdup(prev);
+        counter++;
+    }
+
+    return counter;
 }
