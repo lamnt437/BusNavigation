@@ -46,17 +46,31 @@ char *trim(char *str, const char *seps)
 {
     return ltrim(rtrim(str, seps), seps);
 }
+int printStations(Graph g)
+{
+    JRB jrb_ptr;
+    FILE *f1;
+    f1 = fopen("stations.txt", "w");
+    jrb_traverse(jrb_ptr, g.vertices)
+    {
+        fprintf(f1, "vertex: %s\t-\t%s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
+    }
+    fclose(f1);
+    return 0;
+}
 
-Graph loadGraph(char *filename) {
+Graph loadGraph(char *filename)
+{
     Graph g = createGraph();
 
     FILE *fp = fopen(filename, "r");
-    if(fp == NULL) {
+    if (fp == NULL)
+    {
         puts("Can't read file!");
         exit(EXIT_FAILURE);
         return g;
     }
-    
+
     char buffer[1500052];
 
     fread(buffer, 1500000, 1, fp);
@@ -112,7 +126,7 @@ Graph loadGraph(char *filename) {
 void main()
 {
     Graph g = loadGraph("test111.txt");
-
+    printStations(g);
     char start[ID_LENGTH];
     char stop[ID_LENGTH];
 
@@ -136,13 +150,16 @@ void main()
 
     /* print lines */
     char *prevLine = NULL;
-    for(int i = 0; i < n_edges; i++) {
-        if(prevLine == NULL) {
+    for (int i = 0; i < n_edges; i++)
+    {
+        if (prevLine == NULL)
+        {
             printf("%s: %s\n", getVertex(g, edges[i].prev), edges[i].line);
             prevLine = edges[i].line;
             continue;
         }
-        if(strcmp(prevLine, edges[i].line) != 0) {
+        if (strcmp(prevLine, edges[i].line) != 0)
+        {
             printf("%s: %s\n", getVertex(g, edges[i].prev), edges[i].line);
             prevLine = edges[i].line;
         }
