@@ -53,7 +53,7 @@ int printStations(Graph g)
     f1 = fopen("stations.txt", "w");
     jrb_traverse(jrb_ptr, g.vertices)
     {
-        fprintf(f1, "vertex: %s\t-\t%s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
+        fprintf(f1, "%-10s== %s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
     }
     fclose(f1);
     return 0;
@@ -130,7 +130,7 @@ void printMenu()
 
 void main()
 {
-    Graph g = loadGraph("test111.txt");
+    Graph g = loadGraph("data.txt");
     printStations(g);
     /* start menu */
     int choice;
@@ -150,6 +150,8 @@ void main()
             break;
         case 2:
             printf("\n\n*Output list of stations to file\n\n");
+			printStations(g);
+			printf("Successfully printed stations into \'stations.txt\'\n\n");
             break;
         case 3:
             printf("\n\n*Find the shortest path between 2 stations\n\n");
@@ -201,6 +203,8 @@ void main()
                 if (i == n_edges - 1)
                     printf("%s -----> End\n", getVertex(g, edges[i].next));
             }
+
+			printf("\nLength: %.2lf\n", weight);
             break;
         default:
             printf("\n\nPlease enter a number between 1 and 4!\n\n");
