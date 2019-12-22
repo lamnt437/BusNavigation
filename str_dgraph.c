@@ -458,12 +458,18 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 	int counter = 0;
 	char *current_id = parent_id;
 	while(1){
+        printf("current_id: %s\n", current_id);
 		strcpy(path[counter], current_id);
 		counter++;
 		if(strcmp(current_id, start) == 0)
 			break;
 		current_id = jval_s(jrb_val(jrb_find_str(parent_map, current_id)));
 	}
+
+    // // print path
+    // for(int index = 0; index < counter; index++) {
+    //     printf("path: %s\n", path[index]);
+    // }
 
 	//reverse path
 	int i = 0, j = counter - 1;
@@ -511,6 +517,7 @@ int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **ed
         char linesOnEdge[100][ID_LENGTH];
         int n_linesOnEdge = getLinesOnEdge(g, station1, station2, linesOnEdge);
         
+        // can look forward one line?
         if(prev == NULL) {
             prev = linesOnEdge[0];
         } else {

@@ -1,7 +1,7 @@
 #include "libfdr/jrb.h"
 #include "libfdr/dllist.h"
 
-#define ID_LENGTH 50
+#define ID_LENGTH 1000
 #define INFINITIVE_VALUE 1000000
 // typedef JRB Graph;
 typedef struct{
