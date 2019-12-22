@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "str_dgraph.h"
 
 char *ltrim(char *str, const char *seps)
@@ -46,21 +47,21 @@ char *trim(char *str, const char *seps)
     return ltrim(rtrim(str, seps), seps);
 }
 
-void main()
-{
-    /* fread */
+Graph loadGraph(char *filename) {
     Graph g = createGraph();
-    FILE *fp;
+
+    FILE *fp = fopen(filename, "r");
+    if(fp == NULL) {
+        puts("Can't read file!");
+        exit(EXIT_FAILURE);
+        return g;
+    }
+    
     char buffer[1500052];
-    // char *ptr5 = NULL;
-    // printf("*\n");
-    fp = fopen("test111.txt", "r");
+
     fread(buffer, 1500000, 1, fp);
-    fclose(fp);
 
-    /* ------------------------------------------------------------------------------------------*/
-
-    /////TACH HAM RIENG TOKENIZE
+    // load to graph
     char *linesRest;
     char *stringLine = strtok_r(buffer, "\n", &linesRest);
     while (stringLine != NULL)
@@ -102,19 +103,32 @@ void main()
 
         stringLine = strtok_r(linesRest, "\n", &linesRest);
     }
-    // JRB jrb_ptr;
-    // jrb_traverse(jrb_ptr, g.vertices)
-    // {
-    //     printf("vertex: %s - %s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
-    // }
+
+    fclose(fp);
+
+    return g;
+}
+
+void main()
+{
+    Graph g = loadGraph("test111.txt");
+
+    char start[ID_LENGTH];
+    char stop[ID_LENGTH];
+
+    printf("Enter start id: ");
+    scanf("%s", start);
+    fflush(stdin);
+
+    printf("Enter stop id: ");
+    scanf("%s", stop);
+    fflush(stdin);
 
     /* check shortest path */
     char path[100][ID_LENGTH];
     int length = 0;
-    char *start = "3614";
-    char *stop = "1670";
 
-    double weight = shortestPath(g, start, stop, &length, path);
+    double weight = shortestPath(g, "797", "226", &length, path);
 
     /* check shortestLines */
     Edge edges[EDGES_LENGTH];
