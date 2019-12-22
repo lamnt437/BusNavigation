@@ -1,156 +1,215 @@
-#include "str_dgraph.h"
-#include "libfdr/jrb.h"
-#include "libfdr/jval.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include "str_dgraph.h"
 
-int number_of_edges = 0;
-int number_of_vertices = 0;
-
-Graph loadGraph(FILE *input){
-	Graph graph = createGraph();
-
-	//read line by line
-	char line[100];
-	while(fgets(line, 99, input) != NULL){
-		char *current_subject = strdup(strtok(line, " :"));
-		number_of_vertices += addVertex(graph, current_subject, current_subject);
-
-		char *required_subject;
-		while((required_subject = strtok(NULL, " :\n")) != NULL){
-			number_of_vertices += addVertex(graph, required_subject, required_subject);
-			number_of_edges += addEdge(graph, required_subject, current_subject);
-		}
-	}
-
-	return graph;
+char *ltrim(char *str, const char *seps)
+{
+    size_t totrim;
+    if (seps == NULL)
+    {
+        seps = "\t\n\v\f\r ";
+    }
+    totrim = strspn(str, seps);
+    if (totrim > 0)
+    {
+        size_t len = strlen(str);
+        if (totrim == len)
+        {
+            str[0] = '\0';
+        }
+        else
+        {
+            memmove(str, str + totrim, len + 1 - totrim);
+        }
+    }
+    return str;
 }
 
-int main(int argc, char *argv[]){
-	if(argc != 2){
-		puts("Wrong number of arguments!");
-		return 1;
-	}
+char *rtrim(char *str, const char *seps)
+{
+    int i;
+    if (seps == NULL)
+    {
+        seps = "\t\n\v\f\r ";
+    }
+    i = strlen(str) - 1;
+    while (i >= 0 && strchr(seps, str[i]) != NULL)
+    {
+        str[i] = '\0';
+        i--;
+    }
+    return str;
+}
 
-	FILE *input = fopen(argv[1], "r");
-	if(input == NULL){
-		puts("Input file doesn't exist!");
-		return 2;
-	}
+char *trim(char *str, const char *seps)
+{
+    return ltrim(rtrim(str, seps), seps);
+}
+int printStations(Graph g)
+{
+    JRB jrb_ptr;
+    FILE *f1;
+    f1 = fopen("stations.txt", "w");
+    jrb_traverse(jrb_ptr, g.vertices)
+    {
+        fprintf(f1, "vertex: %s\t-\t%s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
+    }
+    fclose(f1);
+    return 0;
+}
 
-	Graph graph = loadGraph(input);
-	fclose(input);
+Graph loadGraph(char *filename)
+{
+    Graph g = createGraph();
 
-	int choice;
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        puts("Can't read file!");
+        exit(EXIT_FAILURE);
+        return g;
+    }
 
-	printf("MENU:\n\n1 - In so nut, so canh\n2 - Kiem tra chu trinh\n3 - Number of prerequisite subjects\n4 - Khong co gi\n5 - Danh sach mon hoc\n6 - In trinh tu\n7 - Len lich hoc ki\n8 - exit...");
-	scanf("%d", &choice);
+    char buffer[1500052];
 
-	while(choice != 8){
+    fread(buffer, 1500000, 1, fp);
 
-		switch(choice){
-			case 1:
-				printf("\n==In so nut, so canh==\n\n");
-				printf("So dinh: %d\n", number_of_vertices);
-				printf("So canh: %d\n\n", number_of_edges);
-				break;
+    // load to graph
+    char *linesRest;
+    char *stringLine = strtok_r(buffer, "\n", &linesRest);
+    while (stringLine != NULL)
+    {
+        // get linename
+        char *stationsRest;
+        char *lineName = strtok_r(stringLine, ";", &stationsRest);
 
-			case 2:
-				printf("\n==Kiem tra chu trinh==\n\n");
-				if(DAG(graph))
-					printf("Do thi hop le (khong co chu trinh)!\n\n");
-				else{
-					printf("Do thi khong hop le!\n\n");
-					return 3;
-				}
-				break;
-			case 3:
-				printf("\n==Number of prerequisite subjects==\n\n");
-				int repeat_choice;
-				do{
-					printf("Nhap ma mon: ");
-					char name[100];
-					
-					scanf("%s", name);
+        // get forward stations + backward stations
+        char *backwardStations;
+        char *forwardStations = strtok_r(stationsRest, ";", &backwardStations);
 
-					JRB jrb_ptr = jrb_find_str(graph.vertices, name);
-					if(jrb_ptr == NULL)
-						printf("Ma mon hoc khong co trong chuong trinh!\n");
-					else{
-						char inList[100][ID_LENGTH];
-						int number_of_required_subjects = indegree(graph, name, inList);
-						printf("So mon phai hoc truoc la: %d\n", number_of_required_subjects);
-						for(int i = 0; i < number_of_required_subjects; i++){
-							printf("%s ", inList[i]);
-						}
-						printf("\n");
-					}
-					
-					printf("Co muon tim tiep khong?(1 - co, 0 - khong)...");
-					scanf("%d", &repeat_choice);
-				}while(repeat_choice != 0);
+        // get stations from forward stations
+        char *station, *restStations, *stationName;
+        char *prevStation = NULL;
+        station = strtok_r(forwardStations, "__", &restStations);
+        while (station != NULL)
+        {
+            char *stationId = strtok_r(station, "::", &stationName);
+            addVertex(g, stationId, stationName);
+            if (prevStation != NULL)
+                addEdge(g, prevStation, station, lineName);
+            prevStation = stationId;
+            station = strtok_r(restStations, "__", &restStations);
+        }
 
-			case 5:
-				printf("\n==Danh sach mon hoc==\n\n");
-				JRB jrb_ptr;
-				char inList2[100][ID_LENGTH];
-				jrb_traverse(jrb_ptr, graph.vertices){
-					int number = indegree(graph, jval_s(jrb_ptr->val), inList2);
-					if(number == 0)
-						printf("%s ", jval_s(jrb_ptr->val));
-				}
-				printf("\n");
-				jrb_traverse(jrb_ptr, graph.vertices){
-					int number = indegree(graph, jval_s(jrb_ptr->val), inList2);
-					if(number == 1)
-						printf("%s ", jval_s(jrb_ptr->val));
-				}
-				printf("\n");
-				jrb_traverse(jrb_ptr, graph.vertices){
-					int number = indegree(graph, jval_s(jrb_ptr->val), inList2);
-					if(number == 2)
-						printf("%s ", jval_s(jrb_ptr->val));
-				}
-				printf("\n\n");
-				break;
+        // get stations from backward stations
+        prevStation = NULL;
+        station = strtok_r(backwardStations, "__", &restStations);
+        while (station != NULL)
+        {
+            char *stationId = strtok_r(station, "::", &stationName);
+            addVertex(g, stationId, stationName);
+            if (prevStation != NULL)
+                addEdge(g, prevStation, station, lineName);
+            prevStation = stationId;
+            station = strtok_r(restStations, "__", &restStations);
+        }
 
-			case 6:
-				printf("\n==In trinh tu==\n\n");
-				int number_of_subjects;
-				char output[100][ID_LENGTH];
-				topologicalSort(graph, output, &number_of_subjects);
-				for(int i = 0; i < number_of_subjects; i++){
-					if(i < number_of_subjects - 1)
-						printf("%s => ", output[i]);
-					else{
-						printf("%s\n", output[i]);
-					}
-				}
-				printf("\n");
-				break;
-			case 7:
-				printf("\n==Len lich hoc ki==\n\n");
-				int hocky_counter = 0;
-				int number_of_subjects2;
-				char output2[100][ID_LENGTH];
-				topologicalSort(graph, output2, &number_of_subjects2);
-				for(int i = 0; i < number_of_subjects; i++){
-					if(i % 4 == 0){
-						hocky_counter++;
-						printf("*Hoc ki %d:\n", hocky_counter);
-					}
-					printf("%s\n", output[i]);
-				}
-				printf("\n");
+        stringLine = strtok_r(linesRest, "\n", &linesRest);
+    }
 
-			default:
-				break;
-		}
+    fclose(fp);
 
-		printf("MENU:\n\n1 - In so nut, so canh\n2 - Kiem tra chu trinh\n3 - Number of prerequisite subjects\n4 - Khong co gi\n5 - Danh sach mon hoc\n6 - In trinh tu\n7 - Len lich hoc ki\n8 - exit...");
-		scanf("%d", &choice);
-	}
+    return g;
+}
 
-	return 0;
+void printMenu()
+{
+    printf("\n\n=======Bus Navigation=======\n\n1 - View list of stations\n2 - Output list of stations to file\n3 - Find the shortest path between 2 stations\n4 - Exit\nChoose: ");
+}
+
+void main()
+{
+    Graph g = loadGraph("test111.txt");
+    printStations(g);
+    /* start menu */
+    int choice;
+    printMenu();
+    scanf("%d", &choice);
+
+    while (choice != 4)
+    {
+        switch (choice)
+        {
+        case 1:
+            printf("\n\n*View list of stations\n\n");
+            JRB jrb_ptr;
+            jrb_traverse(jrb_ptr, g.vertices) {
+                printf("%s\t==\t%s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
+            }
+            break;
+        case 2:
+            printf("\n\n*Output list of stations to file\n\n");
+            break;
+        case 3:
+            printf("\n\n*Find the shortest path between 2 stations\n\n");
+            char start[ID_LENGTH];
+            char stop[ID_LENGTH];
+
+            printf("Enter start station's id: ");
+            scanf("%s", start);
+            fflush(stdin);
+
+            printf("Enter stop station's id: ");
+            scanf("%s", stop);
+            fflush(stdin);
+            printf("\n");
+
+            /* check shortest path */
+            char path[100][ID_LENGTH];
+            int length = 0;
+
+            double weight = shortestPath(g, start, stop, &length, path);
+
+            /* check shortestLines */
+            Edge edges[EDGES_LENGTH];
+            int n_edges = getLinesFromPath(g, path, length, edges);
+
+            /* print lines */
+            if(n_edges <= 1) {
+                printf("\n\nNo path!\n\n");
+                break;
+            }
+
+            printf("Current Station -----> #Busline to choose\n");
+            printf("=========================================\n\n");
+
+            char *prevLine = NULL;
+            for (int i = 0; i < n_edges; i++)
+            {
+                if (prevLine == NULL)
+                {
+                    printf("%s -----> %s\n", getVertex(g, edges[i].prev), edges[i].line);
+                    prevLine = edges[i].line;
+                    continue;
+                }
+                if (strcmp(prevLine, edges[i].line) != 0)
+                {
+                    printf("%s -----> %s\n", getVertex(g, edges[i].prev), edges[i].line);
+                    prevLine = edges[i].line;
+                }
+                if (i == n_edges - 1)
+                    printf("%s -----> End\n", getVertex(g, edges[i].next));
+            }
+            break;
+        default:
+            printf("\n\nPlease enter a number between 1 and 4!\n\n");
+            break;
+        }
+        printMenu();
+        scanf("%d", &choice);
+    }
+
+    /* end menu */
+    printf("\nExit!\n");
 }
