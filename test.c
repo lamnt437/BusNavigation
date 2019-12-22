@@ -57,20 +57,7 @@ void main()
     fp = fopen("test111.txt", "r");
     fread(buffer, 1500000, 1, fp);
     fclose(fp);
-    // printf("*\n");
-    // printf("%s", buffer);
-    // printf("%d\n", strlen(buffer));
 
-    // /* fgets */
-
-    // FILE *fp;
-    // char line[10000];
-    // fp = fopen("test12.txt", "r");
-    // fgets(line, 9999, fp);
-    // line[strlen(line) - 1] = '\0';
-    // printf("%s\n", line);
-
-    /* end fgets */
     /* ------------------------------------------------------------------------------------------*/
 
     /////TACH HAM RIENG TOKENIZE
@@ -82,13 +69,10 @@ void main()
         char *stationsRest;
         char *lineName = strtok_r(stringLine, ";", &stationsRest);
 
-        //printf("lineName: %s\n", lineName);
-
         // get forward stations + backward stations
         char *backwardStations;
         char *forwardStations = strtok_r(stationsRest, ";", &backwardStations);
-        //printf("fstation: %s\n", backwardStations);
-        //break;
+
         // get stations from forward stations
         char *station, *restStations, *stationName;
         char *prevStation = NULL;
@@ -102,6 +86,7 @@ void main()
             prevStation = stationId;
             station = strtok_r(restStations, "__", &restStations);
         }
+
         // get stations from backward stations
         prevStation = NULL;
         station = strtok_r(backwardStations, "__", &restStations);
@@ -115,79 +100,37 @@ void main()
             station = strtok_r(restStations, "__", &restStations);
         }
 
-        /* check edge */
-        // printf("hasEdge: %d\n", hasEdge(g, "Ngô Gia Khảm", "Bến xe Gia Lâm"));
-
-        /* traverse vertices */
-
         stringLine = strtok_r(linesRest, "\n", &linesRest);
     }
-    JRB jrb_ptr;
-    jrb_traverse(jrb_ptr, g.vertices)
-    {
-        printf("vertex: %s - %s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
-    }
+    // JRB jrb_ptr;
+    // jrb_traverse(jrb_ptr, g.vertices)
+    // {
+    //     printf("vertex: %s - %s\n", jval_s(jrb_ptr->key), jval_s(jrb_ptr->val));
+    // }
 
     /* check shortest path */
     char path[100][ID_LENGTH];
     int length = 0;
-    char *start = "1670";
-    char *stop = "4118";
-    // char *start = "a";
-    // char *stop = "b";
-    double weight = shortestPath(g, start, stop, &length, path);
-    printf("weight: %lf\n", weight);
-    printf("length: %d\n", length);
-    for (int i = 0; i < length; i++)
-    {
-        printf("%s\n", path[i]);
-    }
+    char *start = "3614";
+    char *stop = "1670";
 
+    double weight = shortestPath(g, start, stop, &length, path);
 
     /* check shortestLines */
-    Edge *edges;
-    int n_edges = getLinesFromPath(g, path, length, &edges);
+    Edge edges[EDGES_LENGTH];
+    int n_edges = getLinesFromPath(g, path, length, edges);
+
+    /* print lines */
+    char *prevLine = NULL;
     for(int i = 0; i < n_edges; i++) {
-        printf("%s - %s: %s\n", edges[i].prev, edges[i].next, edges[i].line);
+        if(prevLine == NULL) {
+            printf("%s: %s\n", getVertex(g, edges[i].prev), edges[i].line);
+            prevLine = edges[i].line;
+            continue;
+        }
+        if(strcmp(prevLine, edges[i].line) != 0) {
+            printf("%s: %s\n", getVertex(g, edges[i].prev), edges[i].line);
+            prevLine = edges[i].line;
+        }
     }
-    /* ------------------------------------------------------------------------------------------*/
-    // char output[100][ID_LENGTH];
-    // int n = outdegree(g, "nguyen trai", output);
-
-    // for (int i = 0; i < n; i++)
-    // {
-    //     printf("%s\n", output[i]);
-    // }
-
-    // char lines[100][ID_LENGTH];
-    // int n_lines = getLinesThroughStation(g, "nguyen trai", lines);
-    // printf("Station: nguyen trai\n");
-    // for (int i = 0; i < n_lines; i++)
-    // {
-    //     printf("%s\n", lines[i]);
-    // }
-
-    // // test shortest path
-    // char *start = "khuat duy tien";
-    // char *stop = "nguyen luong bang";
-    // int length = 0;
-    // char path[100][ID_LENGTH];
-
-    // double total_weight = shortestPath(g, start, stop, &length, path);
-
-    // printf("\nShortest path's weight: %lf\n", total_weight);
-    // for (int i = 0; i < length; i++)
-    // {
-    //     printf("%s ", path[i]);
-    // }
-    // printf("\n");
-
-    // // check lines function
-    // printf("\nGet lines from path:\n");
-    // Edge *edges = NULL;
-    // n = getLinesFromPath(g, path, length, &edges);
-    // for (int i = 0; i < n; i++)
-    // {
-    //     printf("%s - %s: %s\n", edges[i].prev, edges[i].next, edges[i].line);
-    // }
 }

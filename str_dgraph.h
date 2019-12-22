@@ -2,6 +2,7 @@
 #include "libfdr/dllist.h"
 
 #define ID_LENGTH 1000
+#define EDGES_LENGTH 1000
 #define INFINITIVE_VALUE 1000000
 // typedef JRB Graph;
 typedef struct{
@@ -33,4 +34,4 @@ void topologicalSort(Graph graph, char output[][ID_LENGTH], int *n);
 int getLinesOnEdge(Graph g, char *v1, char *v2, char lines[][ID_LENGTH]);
 int getLinesThroughStation(Graph g, char *station_id, char lines[][ID_LENGTH]);
 double shortestPath(Graph graph, char *start, char *stop, int *length, char path[][ID_LENGTH]);
-int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **edges);
+int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge edges[EDGES_LENGTH]);

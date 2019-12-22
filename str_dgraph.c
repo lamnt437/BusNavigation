@@ -370,11 +370,8 @@ int checkInQueue(Dllist pqueue, char *id){
 double shortestPath(Graph graph, char *start, char *stop, int *length, char path[][ID_LENGTH]){
 	*length = 0;
     // check if start exists in graph
-    printf("start: %s\n", start);
-    printf("stop: %s\n", stop);
     
 	JRB start_ptr = jrb_find_str(graph.vertices, start);
-    printf("*\n");
 	if(start_ptr == NULL) return INFINITIVE_VALUE;
     
 	//init
@@ -383,25 +380,19 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 	JRB value_map = make_jrb();
 	JRB parent_map = make_jrb();
 
-    printf("*\n");
 	//enqueue start node
 	jrb_insert_str(value_map, strdup(start), new_jval_d(0));
 	jrb_insert_str(parent_map, strdup(start), new_jval_s(start));
 	dll_append(pqueue, new_jval_s(strdup(start)));
     
-    printf("*\n");
 	char *parent_id;
 
 	while(!dll_empty(pqueue)){
 		//get parent id
 		parent_id = pdequeue(pqueue, value_map);
 		jrb_insert_str(visited, strdup(parent_id), new_jval_i(1));
-        
-        printf("*\n");
-        printf("Parent_id: %s\n", parent_id);
 
 		if(strcmp(parent_id, stop) == 0) {
-            printf("BREAKKKKKKKKKKK!\n");
             break;
         }
 
@@ -415,7 +406,6 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 
 		//enqueue children
 		for(int i = 0; i < number_of_children; i++){
-            printf("^\n");
 			char *child_id = outlist[i];
 
 			//find if child is visited
@@ -444,10 +434,7 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 				}
 			}
 		}
-        printf(">>>\n");
 	}
-    printf("parent_id: %s\n", parent_id);
-    // printf("^\n");
 	if(strcmp(parent_id, stop) != 0) return INFINITIVE_VALUE;
 
 	//get path weight
@@ -458,18 +445,12 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 	int counter = 0;
 	char *current_id = parent_id;
 	while(1){
-        printf("current_id: %s\n", current_id);
 		strcpy(path[counter], current_id);
 		counter++;
 		if(strcmp(current_id, start) == 0)
 			break;
 		current_id = jval_s(jrb_val(jrb_find_str(parent_map, current_id)));
 	}
-
-    // // print path
-    // for(int index = 0; index < counter; index++) {
-    //     printf("path: %s\n", path[index]);
-    // }
 
 	//reverse path
 	int i = 0, j = counter - 1;
@@ -488,9 +469,8 @@ double shortestPath(Graph graph, char *start, char *stop, int *length, char path
 }
 
 /* Find combination of lines */
-// strategies
+// strategy
         // choose one, keep current line, if can't then choose the next one randomly
-        // get the smallest number of different lines from list of combinations
 
 int isLineOnEdge(Graph g, char *v1, char *v2, char *line) {
     char linesOnEdge[100][ID_LENGTH];
@@ -502,8 +482,7 @@ int isLineOnEdge(Graph g, char *v1, char *v2, char *line) {
     return 0;
 }
 
-int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **edges) {
-    *edges = (Edge *) malloc(sizeof(Edge) * 100);
+int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge edges[EDGES_LENGTH]) {
     int counter = 0;
 
     if(path_length <= 1)
@@ -517,7 +496,6 @@ int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **ed
         char linesOnEdge[100][ID_LENGTH];
         int n_linesOnEdge = getLinesOnEdge(g, station1, station2, linesOnEdge);
         
-        // can look forward one line?
         if(prev == NULL) {
             prev = linesOnEdge[0];
         } else {
@@ -525,12 +503,14 @@ int getLinesFromPath(Graph g, char path[][ID_LENGTH], int path_length, Edge **ed
             if(onEdge != 1)
                 prev = linesOnEdge[0];
         }
-        
-        ((*edges)[counter]).prev = strdup(station1);
-        ((*edges)[counter]).next = strdup(station2);
-        ((*edges)[counter]).line = strdup(prev);
+
+        edges[counter].prev = strdup(station1);
+        edges[counter].next = strdup(station2);
+        edges[counter].line = strdup(prev);
+
         counter++;
     }
 
     return counter;
 }
+
